@@ -1,14 +1,17 @@
 package pl.piotrsuski.locationprovider;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Display;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -26,7 +29,27 @@ public class MainActivity extends AppCompatActivity {
     protected TextView textview;
     private TextView qth;
     private Button exitbutton;
-    private String locationFormater = "\n\nLat:%1$s\nLng:%2$s";
+    private String locationFormater = "\nLat:%1$s\nLng:%2$s";
+
+    private String newLineIfLand() {
+        return getScreenOrientation()==1?"\n":"";
+    }
+
+    public int getScreenOrientation()
+    {
+        Display getOrient = this.getWindowManager().getDefaultDisplay();
+        int orientation = Configuration.ORIENTATION_UNDEFINED;
+        if(getOrient.getWidth()==getOrient.getHeight()){
+            orientation = Configuration.ORIENTATION_SQUARE;
+        } else{
+            if(getOrient.getWidth() < getOrient.getHeight()){
+                orientation = Configuration.ORIENTATION_PORTRAIT;
+            }else {
+                orientation = Configuration.ORIENTATION_LANDSCAPE;
+            }
+        }
+        return orientation;
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -122,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
 //            String position = String.format("Current Location \n Longitude: %1$s \n Latitude: %2$s",
 //                    location.getLongitude(), location.getLatitude());
             //Toast.makeText(MainActivity.this, position, Toast.LENGTH_LONG).show();
-            String position = String.format("Current Location"+locationFormater,
+            String position = String.format("Current Location"+newLineIfLand()+locationFormater,
                     getdms(location.getLatitude(), true), getdms(location.getLongitude(), false));
             textview.setText(position);
             qth.setText(returnQth(location.getLatitude(), location.getLongitude()));
@@ -133,7 +156,7 @@ public class MainActivity extends AppCompatActivity {
     private class MyLocationListener implements LocationListener {
 
         public void onLocationChanged(Location location) {
-            String position = String.format("New Location"+locationFormater,
+            String position = String.format("New Location"+newLineIfLand()+locationFormater,
                     getdms(location.getLatitude(), true), getdms(location.getLongitude(), false));
             textview.setText(position);
             qth.setText(returnQth(location.getLatitude(), location.getLongitude()));
@@ -222,7 +245,7 @@ public class MainActivity extends AppCompatActivity {
         sec = 3600 * (d - deg);
         min = (int) Math.floor(sec / 60);
         sec = Math.round(1e4 * (sec - 60 * min)) / 1e4;
-        return (t==true?String.format("%4d",deg):String.format(" %03d",deg)) + "°" + String.format("%02d",min) + "'" + String.format("%.2f", sec) + "\"" + a;
+        return (t==true?String.format("%4d",deg):String.format(" %03d",deg)) + "°" + String.format("%02d",min) + "'" + String.format("%05.2f", sec) + "\"" + a;
         //((deg<100&&!t)?"0"+deg:" "+deg)
     }
 
