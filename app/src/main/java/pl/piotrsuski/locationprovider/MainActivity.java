@@ -1,7 +1,8 @@
 package pl.piotrsuski.locationprovider;
 
 import android.Manifest;
-import android.app.Activity;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
@@ -14,8 +15,13 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Display;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.text.DateFormat;
+import java.util.Date;
+import java.util.TimeZone;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -26,30 +32,11 @@ public class MainActivity extends AppCompatActivity {
     protected LocationManager locationManager;
 
     protected Button retrieveLocationButton;
-    protected TextView textview;
+    protected TextView tvLocation;
     private TextView qth;
     private Button exitbutton;
     private String locationFormater = "\nLat:%1$s\nLng:%2$s";
-
-    private String newLineIfLand() {
-        return getScreenOrientation()==1?"\n":"";
-    }
-
-    public int getScreenOrientation()
-    {
-        Display getOrient = this.getWindowManager().getDefaultDisplay();
-        int orientation = Configuration.ORIENTATION_UNDEFINED;
-        if(getOrient.getWidth()==getOrient.getHeight()){
-            orientation = Configuration.ORIENTATION_SQUARE;
-        } else{
-            if(getOrient.getWidth() < getOrient.getHeight()){
-                orientation = Configuration.ORIENTATION_PORTRAIT;
-            }else {
-                orientation = Configuration.ORIENTATION_LANDSCAPE;
-            }
-        }
-        return orientation;
-    }
+    private ImageButton copy;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -57,11 +44,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        retrieveLocationButton = (Button) findViewById(R.id.button);
+        retrieveLocationButton = (Button) findViewById(R.id.btnGetLocation);
         exitbutton = (Button) findViewById(R.id.btnExit);
-        textview = (TextView) findViewById(R.id.textview);
+        tvLocation = (TextView) findViewById(R.id.tvLocation);
         qth = (TextView) findViewById(R.id.qth);
-
+        copy = (ImageButton) findViewById(R.id.copyButton);
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
@@ -113,6 +100,41 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        copy.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Gets a handle to the clipboard service.
+                ClipboardManager clipboard = (ClipboardManager)
+                        getSystemService(Context.CLIPBOARD_SERVICE);
+                // Creates a new text clip to put on the clipboard
+                ClipData clip = ClipData.newPlainText("Qth", qth.getText().toString());
+                // Set the clipboard's primary clip.
+                clipboard.setPrimaryClip(clip);
+
+                Toast.makeText(MainActivity.this, "Text copied: " + qth.getText().toString(), Toast.LENGTH_SHORT).show();
+            }
+        });
+
+    }
+
+
+    private String newLineIfLand() {
+        return getScreenOrientation() == 1 ? "\n" : "";
+    }
+
+    public int getScreenOrientation() {
+        Display getOrient = this.getWindowManager().getDefaultDisplay();
+        int orientation = Configuration.ORIENTATION_UNDEFINED;
+        if (getOrient.getWidth() == getOrient.getHeight()) {
+            orientation = Configuration.ORIENTATION_SQUARE;
+        } else {
+            if (getOrient.getWidth() < getOrient.getHeight()) {
+                orientation = Configuration.ORIENTATION_PORTRAIT;
+            } else {
+                orientation = Configuration.ORIENTATION_LANDSCAPE;
+            }
+        }
+        return orientation;
     }
 
     protected void showCurrentLocation() {
@@ -145,9 +167,11 @@ public class MainActivity extends AppCompatActivity {
 //            String position = String.format("Current Location \n Longitude: %1$s \n Latitude: %2$s",
 //                    location.getLongitude(), location.getLatitude());
             //Toast.makeText(MainActivity.this, position, Toast.LENGTH_LONG).show();
-            String position = String.format("Current Location"+newLineIfLand()+locationFormater,
+            String position = String.format("Current Location" + newLineIfLand() + locationFormater,
                     getdms(location.getLatitude(), true), getdms(location.getLongitude(), false));
-            textview.setText(position);
+
+            String GPSdate = getDateFromGPSasString(location.getTime(), location);
+            tvLocation.setText(position + GPSdate);
             qth.setText(returnQth(location.getLatitude(), location.getLongitude()));
         }
 
@@ -156,27 +180,43 @@ public class MainActivity extends AppCompatActivity {
     private class MyLocationListener implements LocationListener {
 
         public void onLocationChanged(Location location) {
-            String position = String.format("New Location"+newLineIfLand()+locationFormater,
+            String position = String.format("New Location" + newLineIfLand() + locationFormater,
                     getdms(location.getLatitude(), true), getdms(location.getLongitude(), false));
-            textview.setText(position);
+
+            String GPSdate = getDateFromGPSasString(location.getTime(), location);
+            tvLocation.setText(position + GPSdate);
             qth.setText(returnQth(location.getLatitude(), location.getLongitude()));
         }
 
         public void onStatusChanged(String s, int i, Bundle b) {
             Toast.makeText(MainActivity.this, "Provider status changed",
-                    Toast.LENGTH_LONG).show();
+                    Toast.LENGTH_SHORT).show();
         }
 
         public void onProviderDisabled(String s) {
             Toast.makeText(MainActivity.this,
-                    "Provider disabled by the user. GPS turned off", Toast.LENGTH_LONG).show();
+                    "Provider disabled by the user. GPS turned off", Toast.LENGTH_SHORT).show();
         }
 
         public void onProviderEnabled(String s) {
             Toast.makeText(MainActivity.this,
-                    "Provider enabled by the user. GPS turned on", Toast.LENGTH_LONG).show();
+                    "Provider enabled by the user. GPS turned on", Toast.LENGTH_SHORT).show();
         }
 
+    }
+
+    private String getDateFromGPSasString(long time, Location location) {
+        String date = "";
+        if (location.getProvider().equals(android.location.LocationManager.GPS_PROVIDER)) {
+            //Convert date to GMT
+            DateFormat df = DateFormat.getTimeInstance();
+            date = df.format(new Date(time));
+            df.setTimeZone(TimeZone.getTimeZone("gmt"));
+            date = "\nTime GPS: " + date;
+        } else {
+            date = "\nTime Device (" + location.getProvider() + "): " + new Date(time);
+        }
+        return date;
     }
 
     @Override
@@ -191,11 +231,11 @@ public class MainActivity extends AppCompatActivity {
                     // permission was granted, yay! Do the
                     // contacts-related task you need to do.
                     Toast.makeText(MainActivity.this,
-                            "GPS Permission granted", Toast.LENGTH_LONG).show();
+                            "GPS Permission granted", Toast.LENGTH_SHORT).show();
 
                 } else {
                     Toast.makeText(MainActivity.this,
-                            "GPS Permission DENIED", Toast.LENGTH_LONG).show();
+                            "GPS Permission DENIED", Toast.LENGTH_SHORT).show();
                     // permission denied, boo! Disable the
                     // functionality that depends on this permission.
                 }
@@ -245,7 +285,7 @@ public class MainActivity extends AppCompatActivity {
         sec = 3600 * (d - deg);
         min = (int) Math.floor(sec / 60);
         sec = Math.round(1e4 * (sec - 60 * min)) / 1e4;
-        return (t==true?String.format("%4d",deg):String.format(" %03d",deg)) + "°" + String.format("%02d",min) + "'" + String.format("%05.2f", sec) + "\"" + a;
+        return (t == true ? String.format("%4d", deg) : String.format(" %03d", deg)) + "°" + String.format("%02d", min) + "'" + String.format("%05.2f", sec) + "\"" + a;
         //((deg<100&&!t)?"0"+deg:" "+deg)
     }
 
