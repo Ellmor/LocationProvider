@@ -164,15 +164,14 @@ public class MainActivity extends AppCompatActivity {
         Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
 
         if (location != null) {
-//            String position = String.format("Current Location \n Longitude: %1$s \n Latitude: %2$s",
-//                    location.getLongitude(), location.getLatitude());
-            //Toast.makeText(MainActivity.this, position, Toast.LENGTH_LONG).show();
+            //Positions
             String position = String.format("Current Location" + newLineIfLand() + locationFormater,
                     getdms(location.getLatitude(), true), getdms(location.getLongitude(), false));
-
-            String GPSdate = getDateFromGPSasString(location.getTime(), location);
-            tvLocation.setText(position + GPSdate);
+            tvLocation.setText(position);
             qth.setText(returnQth(location.getLatitude(), location.getLongitude()));
+            //Date
+            String GPSdate = getDateFromGPSasString(location.getTime(), location);
+            tv
         }
 
     }

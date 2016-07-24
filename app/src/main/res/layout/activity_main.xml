@@ -33,20 +33,20 @@
         android:typeface="monospace" />
 
     <TextView
+        android:id="@+id/tvTime"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:text="Large Text"
-        android:id="@+id/tvTime"
         android:layout_below="@+id/tvLocation"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />
 
     <LinearLayout
+        android:layout_below="@+id/tvTime"
         android:orientation="horizontal"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/tvTime"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true">
 
@@ -64,10 +64,10 @@
             android:textIsSelectable="true" />
 
         <ImageButton
+            android:id="@+id/copyButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight=".15"
-            android:id="@+id/copyButton"
             android:src="@mipmap/copy"
             android:background="@null"
             android:contentDescription="Copy"
@@ -75,10 +75,10 @@
     </LinearLayout>
 
     <Button
+        android:id="@+id/btnExit"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Exit"
-        android:id="@+id/btnExit"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:textSize="32sp" />
